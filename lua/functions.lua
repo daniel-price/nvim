@@ -166,6 +166,47 @@ local function CopyPath()
   vim.fn.setreg("+", filepath)
 end
 
+function DeleteQuickfixItems()
+  local mode = vim.api.nvim_get_mode()["mode"]
+
+  local start_idx
+  local count
+
+  if mode == "n" then
+    -- Normal mode
+    start_idx = vim.fn.line(".")
+    count = vim.v.count > 0 and vim.v.count or 1
+  else
+    -- Visual mode
+    local v_start_idx = vim.fn.line("v")
+    local v_end_idx = vim.fn.line(".")
+
+    start_idx = math.min(v_start_idx, v_end_idx)
+    count = math.abs(v_end_idx - v_start_idx) + 1
+
+    -- Go back to normal
+    vim.api.nvim_feedkeys(
+      vim.api.nvim_replace_termcodes(
+        "<esc>", -- what to escape
+        true, -- Vim leftovers
+        false, -- Also replace `<lt>`?
+        true -- Replace keycodes (like `<esc>`)?
+      ),
+      "x", -- Mode flag
+      false -- Should be false, since we already `nvim_replace_termcodes()`
+    )
+  end
+
+  local qflist = vim.fn.getqflist()
+
+  for _ = 1, count, 1 do
+    table.remove(qflist, start_idx)
+  end
+
+  vim.fn.setqflist(qflist, "r")
+  vim.fn.cursor(start_idx, 1)
+end
+
 return {
   ToggleTest = ToggleTest,
   ToggleHtml = ToggleHtml,
@@ -174,4 +215,5 @@ return {
   SearchInfrastructure = SearchInfrastructure,
   InsertGuid = InsertGuid,
   CopyPath = CopyPath,
+  DeleteQuickfixItems = DeleteQuickfixItems,
 }

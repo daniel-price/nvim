@@ -141,6 +141,7 @@ leaderKeymap("[c]opy [p]ath", functions.CopyPath)
 ---------------------
 --- AUTO COMMANDS ---
 ---------------------
+local custom_group = vim.api.nvim_create_augroup("custom", { clear = true })
 
 -- Highlight when yanking (copying) text
 vim.api.nvim_create_autocmd("TextYankPost", {
@@ -149,6 +150,23 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   callback = function()
     vim.highlight.on_yank()
   end,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+  group = custom_group,
+  pattern = "qf",
+  callback = function()
+    -- Do not show quickfix in buffer lists.
+    vim.api.nvim_buf_set_option(0, "buflisted", false)
+
+    -- Escape closes quickfix window.
+    vim.keymap.set("n", "<ESC>", "<CMD>cclose<CR>", { buffer = true, remap = false, silent = true })
+
+    -- `dd` deletes an item from the list.
+    vim.keymap.set("n", "dd", DeleteQuickfixItems, { buffer = true })
+    vim.keymap.set("x", "d", DeleteQuickfixItems, { buffer = true })
+  end,
+  desc = "Quickfix tweaks",
 })
 
 ---------------------
