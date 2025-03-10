@@ -655,6 +655,12 @@ local languages = {
     conform = { "elm_format" },
   },
 
+  gleam = {
+    conform = { "gleam" },
+    -- don't install using mason as it is included in gleam itself (installed via brew)
+    lspconfig = true,
+  },
+
   javascript = {
     mason = {
       ["js-debug-adapter"] = {},
@@ -764,6 +770,13 @@ for _, config in pairs(languages) do
   end
 end
 
+local lsp_servers = {}
+for server, config in pairs(languages) do
+  if config.lspconfig then
+    lsp_servers[server] = true
+  end
+end
+
 local formatters_by_ft = {}
 for lang, config in pairs(languages) do
   if config.conform then
@@ -788,6 +801,10 @@ plugin({
     "hrsh7th/cmp-nvim-lsp",
   },
   config = function()
+    for server, _ in pairs(lsp_servers) do
+      require("lspconfig")[server].setup({})
+    end
+
     vim.api.nvim_create_autocmd("LspAttach", {
       group = vim.api.nvim_create_augroup("kickstart-lsp-attach", { clear = true }),
       callback = function(event)
