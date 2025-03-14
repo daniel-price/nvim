@@ -58,7 +58,8 @@ vim.opt.scrolloff = 20
 
 -- Allow using gf to open .handler files from lib/*Stack files
 vim.opt.path = vim.opt.path + "*"
-vim.opt.includeexpr = "substitute(v:fname,'\\.handler','.ts','g')"
+
+vim.opt.includeexpr = "substitute(v:fname, '\\v\\.(handler|queueHandler)', '.ts', 'g')"
 
 vim.diagnostic.config({
   virtual_text = false, -- Turn off inline diagnostics
