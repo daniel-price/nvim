@@ -754,11 +754,11 @@ local languages = {
 }
 
 local treesitter_installs = {}
-for lang, config in pairs(languages) do
+for _, config in pairs(languages) do
   if config.treesitter then
     table.insert(treesitter_installs, config.treesitter)
   else
-    table.insert(treesitter_installs, { lang, config })
+    table.insert(treesitter_installs, config.treesitter)
   end
 end
 
