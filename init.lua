@@ -1,8 +1,14 @@
 ---------------------
------- OPTIONS ------
+----- CONSTANTS -----
 ---------------------
 
 local DEBUG = false
+
+local COPILOT_NODE_PATH = vim.fn.expand("$HOME") .. "/.asdf/installs/nodejs/22.14.0/bin/node"
+
+---------------------
+------ OPTIONS ------
+---------------------
 
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
@@ -450,7 +456,10 @@ plugin({ -- Autocompletion
       "zbirenbaum/copilot.lua",
       cmd = "Copilot",
       lazy = false,
-      opts = { suggestion = { auto_trigger = true, debounce = 150 } },
+      opts = {
+        suggestion = { auto_trigger = true, debounce = 150 },
+        copilot_node_command = COPILOT_NODE_PATH,
+      },
     },
   },
   config = function()
