@@ -2,6 +2,8 @@
 ------ OPTIONS ------
 ---------------------
 
+local DEBUG = false
+
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
@@ -663,7 +665,7 @@ local languages = {
   gleam = {
     conform = { "gleam" },
     -- don't install using mason as it is included in gleam itself (installed via brew)
-    lspconfig = true,
+    lspconfig = { gleam = {} },
   },
 
   javascript = {
@@ -717,9 +719,16 @@ local languages = {
   },
 
   ruby = {
-    mason = {
-      solargraph = {},
-      rubocop = {},
+    -- don't install using mason, instead include it in the repo
+    lspconfig = {
+      rubocop = {
+        cmd = { "rubocop", "--lsp" },
+        filetypes = { "ruby" },
+        root_markers = { "Gemfile", ".git" },
+      },
+    },
+    conform = {
+      "rubocop",
     },
   },
 
@@ -776,9 +785,11 @@ for _, config in pairs(languages) do
 end
 
 local lsp_servers = {}
-for server, config in pairs(languages) do
+for _, config in pairs(languages) do
   if config.lspconfig then
-    lsp_servers[server] = true
+    for server, opts in pairs(config.lspconfig) do
+      lsp_servers[server] = opts
+    end
   end
 end
 
@@ -787,6 +798,13 @@ for lang, config in pairs(languages) do
   if config.conform then
     formatters_by_ft[lang] = config.conform
   end
+end
+
+if DEBUG then
+  print("Treesitter installs: " .. vim.inspect(treesitter_installs))
+  print("Mason servers: " .. vim.inspect(mason_servers))
+  print("LSP servers: " .. vim.inspect(lsp_servers))
+  print("Formatters by filetype: " .. vim.inspect(formatters_by_ft))
 end
 
 plugin({
@@ -806,8 +824,8 @@ plugin({
     "hrsh7th/cmp-nvim-lsp",
   },
   config = function()
-    for server, _ in pairs(lsp_servers) do
-      require("lspconfig")[server].setup({})
+    for server, opts in pairs(lsp_servers) do
+      require("lspconfig")[server].setup(opts)
     end
 
     vim.api.nvim_create_autocmd("LspAttach", {
