@@ -101,6 +101,7 @@ local whichkeyGroups = {
   { "<leader>l", group = "[l]sp" },
   { "<leader>lt", group = "[t]ype" },
   { "<leader>q", group = "[q]uickfix" },
+  { "<leader>r", group = "[r]efactor" },
   { "<leader>s", group = "[s]earch" },
   { "<leader>t", group = "[t]mux / [t]oggle" },
 }
@@ -193,6 +194,8 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 local plugins = {}
+
+---@overload fun(opts: LazyPluginSpec)
 local function plugin(opts)
   table.insert(plugins, opts)
 end
@@ -551,6 +554,8 @@ plugin({ -- Collection of various small independent plugins/modules
 
     -- Add/delete/replace surroundings (brackets, quotes, etc.)
     require("mini.surround").setup()
+
+    require("mini.git").setup()
 
     -- Simple and easy statusline.
     local statusline = require("mini.statusline")
@@ -997,6 +1002,48 @@ plugin({ -- Autoformat
     format_on_save = true,
     formatters_by_ft = formatters_by_ft,
   },
+})
+
+plugin({
+  "ThePrimeagen/refactoring.nvim",
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    "nvim-treesitter/nvim-treesitter",
+  },
+  lazy = false,
+  opts = {
+    printf_statements = {
+      ts = {
+        'console.log("debug path %s");',
+      },
+    },
+  },
+  config = function()
+    leaderKeymap("[r]efactor print [v]ariable", function()
+      require("refactoring").debug.print_var({})
+    end)
+
+    leaderKeymap("[r]efactor [p]rintf", function()
+      require("refactoring").debug.printf({})
+    end)
+
+    leaderKeymap("[r]efactor [c]leanup", function()
+      require("refactoring").debug.cleanup({})
+    end)
+  end,
+  --   printf_statements = {
+  --     -- add a custom printf statement for cpp
+  --     ts = {
+  --       'console.log("debug path %s");',
+  --     },
+  --   },
+  --   print_var_statements = {
+  --     -- add a custom print_var statement for cpp
+  --     ts = {
+  --       'console.log("custom print var %s %%s", %s);',
+  --     },
+  --   },
+  -- },
 })
 
 require("lazy").setup(plugins)
