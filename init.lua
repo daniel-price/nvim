@@ -1014,7 +1014,7 @@ plugin({
   opts = {
     printf_statements = {
       ts = {
-        'console.log("debug path %s");',
+        'console.log("debug path a %s");',
       },
     },
   },
