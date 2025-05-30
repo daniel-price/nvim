@@ -275,7 +275,9 @@ plugin({ -- Adds git related signs to the gutter, as well as utilities for manag
 plugin({
   "nvim-telescope/telescope.nvim",
   event = "VimEnter",
-  branch = "0.1.x",
+  -- temporarily use master branch, to get the fix for some annoying issues https://github.com/nvim-telescope/telescope.nvim/issues/3439
+  --TODO: use specific branch again once new release is out
+  -- branch = "0.1.x",
   dependencies = {
     "nvim-lua/plenary.nvim",
     {
