@@ -275,9 +275,7 @@ plugin({ -- Adds git related signs to the gutter, as well as utilities for manag
 plugin({
   "nvim-telescope/telescope.nvim",
   event = "VimEnter",
-  -- temporarily use master branch, to get the fix for some annoying issues https://github.com/nvim-telescope/telescope.nvim/issues/3439
-  --TODO: use specific branch again once new release is out
-  -- branch = "0.1.x",
+  branch = "0.1.x",
   dependencies = {
     "nvim-lua/plenary.nvim",
     {
@@ -329,6 +327,23 @@ plugin({
     },
   },
   config = function()
+    -- https://github.com/nvim-telescope/telescope.nvim/issues/3439
+    -- Silence the specific position encoding message
+    local notify_original = vim.notify
+    vim.notify = function(msg, ...)
+      if
+        msg
+        and (
+          msg:match("position_encoding param is required")
+          or msg:match("Defaulting to position encoding of the first client")
+          or msg:match("multiple different client offset_encodings")
+        )
+      then
+        return
+      end
+      return notify_original(msg, ...)
+    end
+
     require("telescope").setup({
       defaults = {
         file_ignore_patterns = { "node_modules/.*", ".git/.*", ".*.crt", "%.pem" },
