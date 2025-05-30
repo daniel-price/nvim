@@ -293,17 +293,6 @@ plugin({
     { "nvim-telescope/telescope-ui-select.nvim" },
     { "nvim-tree/nvim-web-devicons" },
     {
-      "danielfalk/smart-open.nvim",
-      branch = "0.2.x",
-      config = function()
-        require("telescope").load_extension("smart_open")
-      end,
-      dependencies = {
-        "kkharji/sqlite.lua",
-        "nvim-telescope/telescope-fzy-native.nvim",
-      },
-    },
-    {
       "axkirillov/easypick.nvim",
       requires = "nvim-telescope/telescope.nvim",
       opts = function(_, opts)
@@ -351,7 +340,7 @@ plugin({
 
     require("telescope").setup({
       defaults = {
-        file_ignore_patterns = { "node_modules/.*", ".git/.*", ".*.crt", "%.pem" },
+        file_ignore_patterns = { ".git/.*", ".*.crt", "%.pem" },
         additional_args = { "--hidden" },
         hidden = true,
         path_display = { "filename_first" },
@@ -397,7 +386,7 @@ plugin({
     vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "[h]elp" })
     vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "[k]eymaps" })
     vim.keymap.set("n", "<leader>sf", function()
-      require("telescope").extensions.smart_open.smart_open({ cwd_only = true })
+      builtin.find_files()
     end, { desc = "[f]iles" })
     vim.keymap.set("n", "<leader>st", builtin.builtin, { desc = "[t]elescope" })
     vim.keymap.set("n", "<leader>sc", builtin.grep_string, { desc = "[c]urrent word" })
