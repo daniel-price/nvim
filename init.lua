@@ -179,11 +179,6 @@ vim.api.nvim_create_autocmd("FileType", {
   desc = "Quickfix tweaks",
 })
 
-vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = "*.ts*",
-  command = ":TSToolsOrganizeImports sync",
-})
-
 ---------------------
 ------ PLUGINS ------
 ---------------------
