@@ -658,6 +658,12 @@ local languages = {
       ["angular-language-server"] = {},
     },
   },
+  astro = {
+    mason = {
+      ["astro-language-server"] = {},
+    },
+    conform = { "prettierd" },
+  },
 
   css = {
     mason = {
@@ -667,6 +673,9 @@ local languages = {
   },
 
   diff = {},
+  htmlangular = {
+    conform = { "prettierd" },
+  },
   html = {},
   luadoc = {},
   markdown = {},
