@@ -539,9 +539,18 @@ plugin({ -- Autocompletion
 
 plugin({
   "folke/tokyonight.nvim",
+  lazy = false,
   priority = 1000, -- Make sure to load this before all the other start plugins.
   init = function()
-    vim.cmd.colorscheme("tokyonight-night")
+    vim.cmd.colorscheme("tokyonight")
+
+    local theme = vim.fn.system("defaults read -g AppleInterfaceStyle"):gsub("\n", "")
+
+    if theme == "Dark" then
+      vim.o.background = "dark"
+    else
+      vim.o.background = "light"
+    end
   end,
 })
 
