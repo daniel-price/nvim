@@ -705,7 +705,7 @@ function Language:lspconfig(config)
   return self
 end
 
----@param config string[]
+---@param config table<string, { install: boolean }>
 function Language:conform(config)
   self.conform_config = config
   return self
@@ -719,13 +719,13 @@ end
 
 Language:new("angular"):mason({ ["angular-language-server"] = {} })
 
-Language:new("astro"):mason({ ["astro-language-server"] = {} }):conform({ "prettierd" })
+Language:new("astro"):mason({ ["astro-language-server"] = {} }):conform({ prettierd = { install = true } })
 
-Language:new("css"):mason({ ["css-lsp"] = {} }):conform({ "prettierd" })
+Language:new("css"):mason({ ["css-lsp"] = {} }):conform({ prettierd = { install = true } })
 
 Language:new("diff")
 
-Language:new("html"):conform({ "prettierd" })
+Language:new("html"):conform({ { prettierd = { install = true } } })
 
 Language:new("luadoc")
 
@@ -739,11 +739,12 @@ Language:new("elm"):mason({ ["elm-language-server"] = {} }):conform({ "elm_forma
 
 Language:new("gleam"):conform({ "gleam" }):lspconfig({ gleam = {} })
 
-Language:new("javascript"):mason({ ["js-debug-adapter"] = {} }):conform({ "prettierd" })
+Language:new("javascript"):mason({ ["js-debug-adapter"] = {} }):conform({ prettierd = { install = true } })
 
-Language:new("json"):conform({ "prettierd" })
+Language:new("json"):conform({ prettierd = { install = true } })
 
-Language:new("jsonc"):conform({ "prettierd" })
+Language:new("jsonc"):conform({ prettierd = { install = true } })
+
 Language:new("typescript")
   :mason({
     eslint = {
@@ -757,7 +758,7 @@ Language:new("typescript")
       },
     },
   })
-  :conform({ "prettierd" })
+  :conform({ prettierd = { install = true } })
 
 Language:new("lua")
   :mason({
@@ -772,8 +773,10 @@ Language:new("lua")
     },
     stylua = {},
   })
-  :conform({ "stylua" })
+  :conform({ stylua = { install = true } })
+
 Language:new("ruby"):mason({ ruby_lsp = {} }):conform({ "rubocop" })
+
 Language:new("rust")
   :mason({
     rust_analyzer = {
@@ -793,7 +796,7 @@ Language:new("sh")
     shellcheck = {},
     ["bash-language-server"] = {},
   })
-  :conform({ "shfmt" })
+  :conform({ shfmt = { install = true } })
   :treesitter("bash")
 
 Language:new("sql"):mason({
@@ -831,7 +834,13 @@ for fileType, config in pairs(languages) do
 
   if config.conform_config then
     debugPrint("Adding conform config for fileType: " .. fileType, config.conform_config)
-    formatters_by_ft[fileType] = config.conform_config
+    formatters_by_ft[fileType] = {}
+    for formatter, conform_config in pairs(config.conform_config) do
+      table.insert(formatters_by_ft[fileType], formatter)
+      if type(conform_config) == "table" and conform_config.install then
+        mason_servers[formatter] = {}
+      end
+    end
   end
 end
 
