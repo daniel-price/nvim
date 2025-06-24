@@ -4,7 +4,22 @@
 
 local DEBUG = false
 
-local COPILOT_NODE_PATH = vim.fn.expand("$HOME") .. "/.asdf/installs/nodejs/22.14.0/bin/node"
+local COPILOT_NODE_PATH = vim.fn.expand("$HOME") .. "/.local/share/mise/installs/node/22.14.0/bin/node"
+
+---------------------
+------ FUNCTIONS ----
+---------------------
+
+local function debugPrint(...)
+  if DEBUG then
+    for _, value in ipairs({ ... }) do
+      if type(value) == "table" then
+        value = vim.inspect(value)
+      end
+      print(value)
+    end
+  end
+end
 
 ---------------------
 ------ OPTIONS ------
@@ -85,8 +100,9 @@ vim.keymap.set("n", "<S-Tab>", "<cmd>bprev<CR>", { desc = "Previous buffer" })
 vim.keymap.set("n", "<Tab>", "<cmd>bnext<CR>", { desc = "Next buffer" })
 vim.keymap.set("n", "<C-p>", "<cmd>cprev<cr>", { desc = "Previous quickfix item" })
 vim.keymap.set("n", "<C-n>", "<cmd>cnext<cr>", { desc = "Next quickfix item" })
-vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous [D]iagnostic message" })
-vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next [D]iagnostic message" })
+
+-- Show diagnostics in a floating window when moving between diagnostics using ]d and [d
+vim.diagnostic.config({ jump = { float = true } })
 
 -- Document existing key chains
 local whichkeyGroups = {
@@ -167,7 +183,7 @@ vim.api.nvim_create_autocmd("FileType", {
   pattern = "qf",
   callback = function()
     -- Do not show quickfix in buffer lists.
-    vim.api.nvim_buf_set_option(0, "buflisted", false)
+    vim.api.nvim_set_option_value("buflisted", false, { buf = 0 })
 
     -- Escape closes quickfix window.
     vim.keymap.set("n", "<ESC>", "<CMD>cclose<CR>", { buffer = true, remap = false, silent = true })
@@ -248,7 +264,6 @@ plugin({ -- Adds git related signs to the gutter, as well as utilities for manag
       map("n", "<leader>gsh", gitsigns.stage_hunk, { desc = "[h]unk" })
       map("n", "<leader>grb", gitsigns.reset_buffer, { desc = "[b]uffer" })
       map("n", "<leader>grh", gitsigns.reset_hunk, { desc = "[h]unk" })
-      map("n", "<leader>gu", gitsigns.undo_stage_hunk, { desc = "[u]ndo stage hunk" })
       map("n", "<leader>gp", gitsigns.preview_hunk, { desc = "[p]review hunk" })
       map("n", "<leader>gb", gitsigns.blame_line, { desc = "[b]lame Line" })
       map("n", "<leader>gB", function()
@@ -260,7 +275,7 @@ plugin({ -- Adds git related signs to the gutter, as well as utilities for manag
       end, { desc = "[D]iff against last commit" })
       -- Toggles
       map("n", "<leader>gtb", gitsigns.toggle_current_line_blame, { desc = "[t]oggle [b]lame line" })
-      map("n", "<leader>gtd", gitsigns.toggle_deleted, { desc = "[t]oggle [d]eleted" })
+      map("n", "<leader>gtd", gitsigns.preview_hunk_inline, { desc = "[t]oggle [d]eleted" })
     end,
     signs = {
       add = { text = "+" },
@@ -319,6 +334,7 @@ plugin({
     -- https://github.com/nvim-telescope/telescope.nvim/issues/3439
     -- Silence the specific position encoding message
     local notify_original = vim.notify
+    ---@diagnostic disable-next-line: duplicate-set-field
     vim.notify = function(msg, ...)
       if
         msg
@@ -661,188 +677,162 @@ plugin({ "almo7aya/openingh.nvim" })
 ----- LANGUAGES -----
 ---------------------
 
-local languages = {
-  angular = {
-    mason = {
-      ["angular-language-server"] = {},
-    },
-  },
-  astro = {
-    mason = {
-      ["astro-language-server"] = {},
-    },
-    conform = { "prettierd" },
-  },
-
-  css = {
-    mason = {
-      ["css-lsp"] = {},
-    },
-    conform = { "prettierd" },
-  },
-
-  diff = {},
-  htmlangular = {
-    conform = { "prettierd" },
-  },
-  html = {},
-  luadoc = {},
-  markdown = {},
-  markdown_inline = {},
-  query = {},
-  vim = {},
-  vimdoc = {},
-
-  elm = {
-    mason = {
-      ["elm-language-server"] = {},
-    },
-    conform = { "elm_format" },
-  },
-
-  gleam = {
-    conform = { "gleam" },
-    -- don't install using mason as it is included in gleam itself (installed via brew)
-    lspconfig = { gleam = {} },
-  },
-
-  javascript = {
-    mason = {
-      ["js-debug-adapter"] = {},
-    },
-    conform = {
-      "prettierd",
-    },
-  },
-
-  json = {
-    conform = { "prettierd" },
-  },
-
-  jsonc = {
-    conform = { "prettierd" },
-  },
-
-  typescript = {
-    mason = {
-      eslint = {
-        {
-          on_attach = function(_, bufnr)
-            vim.api.nvim_create_autocmd("BufWritePre", {
-              buffer = bufnr,
-              command = "EslintFixAll",
-            })
-          end,
-        },
-      },
-    },
-    conform = { "prettierd" },
-  },
-
-  lua = {
-    mason = {
-      lua_ls = {
-        settings = {
-          Lua = {
-            completion = {
-              callSnippet = "Replace",
-            },
-          },
-        },
-      },
-    },
-    conform = {
-      "stylua",
-    },
-  },
-
-  ruby = {
-    -- don't install using mason, instead include it in the repo
-    lspconfig = {
-      rubocop = {
-        cmd = { "rubocop", "--lsp" },
-        filetypes = { "ruby" },
-        root_markers = { "Gemfile", ".git" },
-      },
-    },
-    conform = {
-      "rubocop",
-    },
-  },
-
-  rust = {
-    mason = {
-      rust_analyzer = {
-        settings = {
-          ["rust-analyzer"] = {
-            check = {
-              command = "clippy",
-            },
-          },
-        },
-      },
-    },
-    conform = {
-      "rustfmt",
-    },
-  },
-
-  sh = {
-    mason = {
-      shellcheck = {},
-      ["bash-language-server"] = {},
-    },
-    conform = { "shfmt" },
-    treesitter = "bash",
-  },
-
-  sql = {
-    mason = {
-      sqlfmt = {},
-      sqlls = {},
-    },
-  },
-}
-
 local treesitter_installs = {}
-for _, config in pairs(languages) do
-  if config.treesitter then
-    table.insert(treesitter_installs, config.treesitter)
-  else
-    table.insert(treesitter_installs, config.treesitter)
-  end
+local mason_servers = {}
+local lsp_servers = {}
+local formatters_by_ft = {}
+
+Language = {}
+
+local languages = {}
+
+---@param language string
+function Language:new(language)
+  local instance = setmetatable({}, { __index = self })
+  languages[language] = instance
+  return instance
 end
 
-local mason_servers = {}
-for _, config in pairs(languages) do
-  if config.mason then
-    for server, opts in pairs(config.mason) do
+---@param config table<string, any>
+function Language:mason(config)
+  self.mason_config = config
+  return self
+end
+
+---@param config table<string, any>
+function Language:lspconfig(config)
+  self.lspconfig_config = config
+  return self
+end
+
+---@param config string[]
+function Language:conform(config)
+  self.conform_config = config
+  return self
+end
+
+---@param config string
+function Language:treesitter(config)
+  self.treesitter_config = config
+  return self
+end
+
+Language:new("angular"):mason({ ["angular-language-server"] = {} })
+
+Language:new("astro"):mason({ ["astro-language-server"] = {} }):conform({ "prettierd" })
+
+Language:new("css"):mason({ ["css-lsp"] = {} }):conform({ "prettierd" })
+
+Language:new("diff")
+
+Language:new("html"):conform({ "prettierd" })
+
+Language:new("luadoc")
+
+Language:new("markdown")
+
+Language:new("markdown_inline")
+Language:new("query")
+Language:new("vim")
+Language:new("vimdoc")
+Language:new("elm"):mason({ ["elm-language-server"] = {} }):conform({ "elm_format" })
+
+Language:new("gleam"):conform({ "gleam" }):lspconfig({ gleam = {} })
+
+Language:new("javascript"):mason({ ["js-debug-adapter"] = {} }):conform({ "prettierd" })
+
+Language:new("json"):conform({ "prettierd" })
+
+Language:new("jsonc"):conform({ "prettierd" })
+Language:new("typescript")
+  :mason({
+    eslint = {
+      {
+        on_attach = function(_, bufnr)
+          vim.api.nvim_create_autocmd("BufWritePre", {
+            buffer = bufnr,
+            command = "EslintFixAll",
+          })
+        end,
+      },
+    },
+  })
+  :conform({ "prettierd" })
+
+Language:new("lua")
+  :mason({
+    lua_ls = {
+      settings = {
+        Lua = {
+          completion = {
+            callSnippet = "Replace",
+          },
+        },
+      },
+    },
+    stylua = {},
+  })
+  :conform({ "stylua" })
+Language:new("ruby"):mason({ ruby_lsp = {} }):conform({ "rubocop" })
+Language:new("rust")
+  :mason({
+    rust_analyzer = {
+      settings = {
+        ["rust-analyzer"] = {
+          check = {
+            command = "clippy",
+          },
+        },
+      },
+    },
+  })
+  :conform({ "rustfmt" })
+
+Language:new("sh")
+  :mason({
+    shellcheck = {},
+    ["bash-language-server"] = {},
+  })
+  :conform({ "shfmt" })
+  :treesitter("bash")
+
+Language:new("sql"):mason({
+  sqlfmt = {},
+  sqlls = {},
+})
+
+debugPrint("Treesitter installs: ", vim.inspect(treesitter_installs))
+debugPrint("Mason servers: ", mason_servers)
+debugPrint("LSP servers: ", lsp_servers)
+debugPrint("Formatters by filetype: ", formatters_by_ft)
+
+-- Loop through languages
+debugPrint("Setting up languages...")
+debugPrint(vim.inspect(languages))
+for fileType, config in pairs(languages) do
+  if config.treesitter_config then
+    table.insert(treesitter_installs, config.treesitter_config)
+  else
+    -- If no treesitter is specified, use the fileType as the default
+    table.insert(treesitter_installs, fileType)
+  end
+
+  if config.mason_config then
+    for server, opts in pairs(config.mason_config) do
       mason_servers[server] = opts
     end
   end
-end
 
-local lsp_servers = {}
-for _, config in pairs(languages) do
-  if config.lspconfig then
-    for server, opts in pairs(config.lspconfig) do
+  if config.lspconfig_config then
+    for server, opts in pairs(config.lspconfig_config) do
       lsp_servers[server] = opts
     end
   end
-end
 
-local formatters_by_ft = {}
-for lang, config in pairs(languages) do
-  if config.conform then
-    formatters_by_ft[lang] = config.conform
+  if config.conform_config then
+    debugPrint("Adding conform config for fileType: " .. fileType, config.conform_config)
+    formatters_by_ft[fileType] = config.conform_config
   end
-end
-
-if DEBUG then
-  print("Treesitter installs: " .. vim.inspect(treesitter_installs))
-  print("Mason servers: " .. vim.inspect(mason_servers))
-  print("LSP servers: " .. vim.inspect(lsp_servers))
-  print("Formatters by filetype: " .. vim.inspect(formatters_by_ft))
 end
 
 plugin({
@@ -892,8 +882,9 @@ plugin({
 
         -- Highlight references of the word under your cursor
         -- when your cursor rests there for a little while.
+
         local client = vim.lsp.get_client_by_id(event.data.client_id)
-        if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
+        if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
           local highlight_augroup = vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
           vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
             buffer = event.buf,
