@@ -716,9 +716,17 @@ for fileType, config in pairs(languages) do
     debugPrint("Adding conform config for fileType: " .. fileType, config.conform_config)
     formatters_by_ft[fileType] = {}
     for formatter, conform_config in pairs(config.conform_config) do
-      table.insert(formatters_by_ft[fileType], formatter)
       if type(conform_config) == "table" and conform_config.install then
+        if type(formatter) ~= "string" then
+          error(fileType .. ": Formatter must be a string, got: " .. type(formatter))
+        end
+        table.insert(formatters_by_ft[fileType], formatter)
         mason_servers[formatter] = {}
+      else
+        if type(conform_config) ~= "string" then
+          error(fileType .. ": Formatter must be a string, got: " .. type(conform_config))
+        end
+        table.insert(formatters_by_ft[fileType], conform_config)
       end
     end
   end
@@ -908,8 +916,8 @@ plugin({ -- Autoformat
   },
   opts = {
     notify_on_error = false,
-    format_on_save = true,
-    formatters_by_ft = formatters_by_ft,
+    -- format_on_save = true,
+    -- formatters_by_ft = formatters_by_ft,
   },
 })
 

@@ -41,7 +41,7 @@ Language:new("css"):mason({ ["css-lsp"] = {} }):conform({ prettierd = { install 
 
 Language:new("diff")
 
-Language:new("html"):conform({ { prettierd = { install = true } } })
+Language:new("html"):conform({ prettierd = { install = true } })
 
 Language:new("luadoc")
 
