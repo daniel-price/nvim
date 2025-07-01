@@ -774,9 +774,6 @@ plugin({
 
         map("<leader>lr", vim.lsp.buf.rename, "[L]sp [r]ename")
 
-        map("<leader>la", vim.lsp.buf.code_action, "[L]sp code [a]ction")
-        map("<leader>la", vim.lsp.buf.code_action, "[L]sp code [a]ction", "v")
-
         -- Highlight references of the word under your cursor
         -- when your cursor rests there for a little while.
 
@@ -961,6 +958,26 @@ plugin({
   --     },
   --   },
   -- },
+})
+
+plugin({
+  "rachartier/tiny-code-action.nvim",
+  dependencies = {
+    { "nvim-lua/plenary.nvim" },
+
+    -- optional picker via telescope
+    { "nvim-telescope/telescope.nvim" },
+  },
+  event = "LspAttach",
+  opts = {
+    backend = "delta",
+    picker = "select",
+  },
+  init = function()
+    leaderKeymap("[l]sp code [a]ction", function()
+      require("tiny-code-action").code_action({})
+    end)
+  end,
 })
 
 require("lazy").setup(plugins)
