@@ -334,20 +334,36 @@ plugin({
   },
   config = function()
     -- https://github.com/nvim-telescope/telescope.nvim/issues/3439
-    -- Silence the specific position encoding message
+    -- Silence the deprecation for telescope, as it is fixed in master but still waiting for a new release
+    local deprecate_original = vim.deprecate
+    ---@diagnostic disable-next-line: duplicate-set-field
+    vim.deprecate = function(msg, ...)
+      local trace = debug.traceback()
+      if trace:match("telescope.nvim") then
+        if msg:match("vim.lsp.util.jump_to_location") then
+          return
+        end
+      end
+
+      return deprecate_original(msg, ...)
+    end
+
+    -- https://github.com/nvim-telescope/telescope.nvim/issues/3439
+    -- Silence the specific position encoding message, as it is fixed in master but still waiting for a new release
     local notify_original = vim.notify
     ---@diagnostic disable-next-line: duplicate-set-field
     vim.notify = function(msg, ...)
-      if
-        msg
-        and (
-          msg:match("position_encoding param is required")
-          or msg:match("Defaulting to position encoding of the first client")
-          or msg:match("multiple different client offset_encodings")
-        )
-      then
-        return
+      local trace = debug.traceback()
+      if trace:match("telescope.nvim") then
+        if
+          msg:match(
+            "position_encoding param is required in vim.lsp.util.make_position_params. Defaulting to position encoding of the first client."
+          )
+        then
+          return
+        end
       end
+
       return notify_original(msg, ...)
     end
 
@@ -398,9 +414,6 @@ plugin({
     local builtin = require("telescope.builtin")
     vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "[h]elp" })
     vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "[k]eymaps" })
-    vim.keymap.set("n", "<leader>sf", function()
-      builtin.find_files()
-    end, { desc = "[f]iles" })
     vim.keymap.set("n", "<leader>st", builtin.builtin, { desc = "[t]elescope" })
     vim.keymap.set("n", "<leader>sc", builtin.grep_string, { desc = "[c]urrent word" })
     vim.keymap.set("n", "<leader>sw", builtin.live_grep, { desc = "[w]ord" })
@@ -976,6 +989,19 @@ plugin({
   init = function()
     leaderKeymap("[l]sp code [a]ction", function()
       require("tiny-code-action").code_action({})
+    end)
+  end,
+})
+
+plugin({
+  "junegunn/fzf.vim",
+  dependencies = {
+    "junegunn/fzf",
+  },
+  init = function()
+    leaderKeymap("[s]earch [f]iles", function()
+      ---run command ":Files<CR>"
+      vim.cmd("Files")
     end)
   end,
 })
