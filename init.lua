@@ -122,6 +122,7 @@ local whichkeyGroups = {
   { "<leader>r", group = "[r]efactor" },
   { "<leader>s", group = "[s]earch" },
   { "<leader>t", group = "[t]mux / [t]oggle" },
+  { "<leader>u", group = "[u]ndo" },
 }
 
 local function leaderKeymap(desc, func)
@@ -1003,6 +1004,13 @@ plugin({
       ---run command ":Files<CR>"
       vim.cmd("Files")
     end)
+  end,
+})
+
+plugin({
+  "mbbill/undotree",
+  init = function()
+    leaderKeymap("[u]ndo [t]ree", vim.cmd.UndotreeToggle)
   end,
 })
 
