@@ -246,12 +246,21 @@ plugin({ -- Adds git related signs to the gutter, as well as utilities for manag
         vim.keymap.set(mode, l, r, opts)
       end
 
+      ---Wrap gitsigns functions to avoid type issue from lua-language-server
+      ---@type fun(direction: 'next'|'prev')
+      local nav_hunk = gitsigns.nav_hunk
+
+      ---@type fun(base: '@')
+      local diffthis = gitsigns.diffthis
+
+      nav_hunk("prev")
+
       -- Navigation
       map("n", "[g", function()
         if vim.wo.diff then
           vim.cmd.normal({ "[g", bang = true })
         else
-          gitsigns.nav_hunk("prev")
+          nav_hunk("prev")
         end
       end, { desc = "previous [g]it change" })
 
@@ -259,7 +268,7 @@ plugin({ -- Adds git related signs to the gutter, as well as utilities for manag
         if vim.wo.diff then
           vim.cmd.normal({ "]g", bang = true })
         else
-          gitsigns.nav_hunk("next")
+          nav_hunk("next")
         end
       end, { desc = "next [g]it change" })
 
@@ -272,9 +281,9 @@ plugin({ -- Adds git related signs to the gutter, as well as utilities for manag
       map("n", "<leader>gB", function()
         gitsigns.blame_line({ full = true })
       end, { desc = "[b]lame line (full)" })
-      map("n", "<leader>gd", gitsigns.diffthis, { desc = "[d]iff against index" })
+      map("n", "<leader>gd", diffthis, { desc = "[d]iff against index" })
       map("n", "<leader>gD", function()
-        gitsigns.diffthis("@")
+        diffthis("@")
       end, { desc = "[D]iff against last commit" })
       -- Toggles
       map("n", "<leader>gtb", gitsigns.toggle_current_line_blame, { desc = "[t]oggle [b]lame line" })
@@ -334,39 +343,39 @@ plugin({
     },
   },
   config = function()
-    -- https://github.com/nvim-telescope/telescope.nvim/issues/3439
-    -- Silence the deprecation for telescope, as it is fixed in master but still waiting for a new release
-    local deprecate_original = vim.deprecate
-    ---@diagnostic disable-next-line: duplicate-set-field
-    vim.deprecate = function(msg, ...)
-      local trace = debug.traceback()
-      if trace:match("telescope.nvim") then
-        if msg:match("vim.lsp.util.jump_to_location") then
-          return
-        end
-      end
-
-      return deprecate_original(msg, ...)
-    end
-
-    -- https://github.com/nvim-telescope/telescope.nvim/issues/3439
-    -- Silence the specific position encoding message, as it is fixed in master but still waiting for a new release
-    local notify_original = vim.notify
-    ---@diagnostic disable-next-line: duplicate-set-field
-    vim.notify = function(msg, ...)
-      local trace = debug.traceback()
-      if trace:match("telescope.nvim") then
-        if
-          msg:match(
-            "position_encoding param is required in vim.lsp.util.make_position_params. Defaulting to position encoding of the first client."
-          )
-        then
-          return
-        end
-      end
-
-      return notify_original(msg, ...)
-    end
+    -- -- https://github.com/nvim-telescope/telescope.nvim/issues/3439
+    -- -- Silence the deprecation for telescope, as it is fixed in master but still waiting for a new release
+    -- local deprecate_original = vim.deprecate
+    -- ---@diagnostic disable-next-line: duplicate-set-field
+    -- vim.deprecate = function(msg, ...)
+    --   local trace = debug.traceback()
+    --   if trace:match("telescope.nvim") then
+    --     if msg:match("vim.lsp.util.jump_to_location") then
+    --       return
+    --     end
+    --   end
+    --
+    --   return deprecate_original(msg, ...)
+    -- end
+    --
+    -- -- https://github.com/nvim-telescope/telescope.nvim/issues/3439
+    -- -- Silence the specific position encoding message, as it is fixed in master but still waiting for a new release
+    -- local notify_original = vim.notify
+    -- ---@diagnostic disable-next-line: duplicate-set-field
+    -- vim.notify = function(msg, ...)
+    --   local trace = debug.traceback()
+    --   if trace:match("telescope.nvim") then
+    --     if
+    --       msg:match(
+    --         "position_encoding param is required in vim.lsp.util.make_position_params. Defaulting to position encoding of the first client."
+    --       )
+    --     then
+    --       return
+    --     end
+    --   end
+    --
+    --   return notify_original(msg, ...)
+    -- end
 
     require("telescope").setup({
       defaults = {
@@ -444,6 +453,10 @@ plugin({
     vim.keymap.set("n", "<leader>sn", function()
       builtin.find_files({ cwd = vim.fn.stdpath("config") })
     end, { desc = "[n]eovim files" })
+
+    leaderKeymap("[s]earch [f]iles", function()
+      builtin.find_files({ hidden = true })
+    end)
   end,
 })
 
@@ -994,18 +1007,17 @@ plugin({
   end,
 })
 
-plugin({
-  "junegunn/fzf.vim",
-  dependencies = {
-    "junegunn/fzf",
-  },
-  init = function()
-    leaderKeymap("[s]earch [f]iles", function()
-      ---run command ":Files<CR>"
-      vim.cmd("Files")
-    end)
-  end,
-})
+-- plugin({
+--   "junegunn/fzf.vim",
+--   dependencies = {
+--     "junegunn/fzf",
+--   },
+--   init = function()
+--     leaderKeymap("[s]earch [f]iles", function()
+--       vim.cmd("Files")
+--     end)
+--   end,
+-- })
 
 plugin({
   "mbbill/undotree",
