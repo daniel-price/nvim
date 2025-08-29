@@ -380,8 +380,6 @@ plugin({
     require("telescope").setup({
       defaults = {
         file_ignore_patterns = { ".git/.*", ".*.crt", "%.pem" },
-        additional_args = { "--hidden" },
-        hidden = true,
         path_display = { "filename_first" },
         layout_strategy = "vertical",
         layout_config = {
@@ -392,13 +390,7 @@ plugin({
       },
       pickers = {
         find_files = {
-          hidden = true,
-        },
-        grep_string = {
-          additional_args = { "--hidden" },
-        },
-        live_grep = {
-          additional_args = { "--hidden" },
+          find_command = { "fd", "--type", "f" },
         },
         buffers = {
           show_all_buffers = true,
@@ -1006,18 +998,6 @@ plugin({
     end)
   end,
 })
-
--- plugin({
---   "junegunn/fzf.vim",
---   dependencies = {
---     "junegunn/fzf",
---   },
---   init = function()
---     leaderKeymap("[s]earch [f]iles", function()
---       vim.cmd("Files")
---     end)
---   end,
--- })
 
 plugin({
   "mbbill/undotree",
