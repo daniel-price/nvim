@@ -124,6 +124,8 @@ Language:new("sql"):mason({
   sqlls = {},
 })
 
+Language:new("kdl"):conform({ "kdlfmt" })
+
 Language:new("other"):mason({
   ["harper-ls"] = {},
 })

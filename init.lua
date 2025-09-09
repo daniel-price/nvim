@@ -100,8 +100,6 @@ vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 -- Previous/next mappings
 vim.keymap.set("n", "<S-Tab>", "<cmd>bprev<CR>", { desc = "Previous buffer" })
 vim.keymap.set("n", "<Tab>", "<cmd>bnext<CR>", { desc = "Next buffer" })
-vim.keymap.set("n", "<C-p>", "<cmd>cprev<cr>", { desc = "Previous quickfix item" })
-vim.keymap.set("n", "<C-n>", "<cmd>cnext<cr>", { desc = "Next quickfix item" })
 
 -- Show diagnostics in a floating window when moving between diagnostics using ]d and [d
 vim.diagnostic.config({ jump = { float = true } })
@@ -150,6 +148,8 @@ end
 
 -- Quickfix
 leaderKeymap("[q]uickfix [d]iagnostics", vim.diagnostic.setqflist)
+leaderKeymap("[q]uickfix [p]revious", "<cmd>cprev<cr>")
+leaderKeymap("[q]uickfix [n]ext", "<cmd>cnext<cr>")
 
 -- Terminal/Toggle
 local functions = require("functions")
