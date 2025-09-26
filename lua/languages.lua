@@ -126,8 +126,24 @@ Language:new("sql"):mason({
 
 Language:new("kdl"):conform({ "kdlfmt" })
 
+-- LSPs with no TS config
 Language:new("other"):mason({
   ["harper-ls"] = {},
+  ["herb-language-server"] = {},
+})
+
+vim.filetype.add({
+  extension = {
+    ["herb"] = "html",
+  },
+})
+
+Language:new("embedded_template"):lspconfig({
+  ["herb_ls"] = {
+    cmd = { "herb-language-server", "--stdio" },
+    filetypes = { "html", "ruby", "eruby", "herb" },
+    root_markers = { "Gemfile", ".git" },
+  },
 })
 
 return languages
