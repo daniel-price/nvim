@@ -300,155 +300,65 @@ plugin({ -- Adds git related signs to the gutter, as well as utilities for manag
 })
 
 plugin({
-  "nvim-telescope/telescope.nvim",
+  "ibhagwan/fzf-lua",
   event = "VimEnter",
-  branch = "0.1.x",
   dependencies = {
-    "nvim-lua/plenary.nvim",
-    {
-      "nvim-telescope/telescope-fzf-native.nvim",
-      build = "make",
-      cond = function()
-        return vim.fn.executable("make") == 1
-      end,
-    },
-    { "nvim-telescope/telescope-ui-select.nvim" },
-    { "nvim-tree/nvim-web-devicons" },
-    {
-      "axkirillov/easypick.nvim",
-      requires = "nvim-telescope/telescope.nvim",
-      opts = function(_, opts)
-        local easypick = require("easypick")
-
-        opts.pickers = {
-          {
-            name = "Last commit",
-            command = "git diff --name-only HEAD HEAD~1 --relative",
-            previewer = easypick.previewers.branch_diff({ base_branch = "HEAD~1" }),
-          },
-          {
-            name = "Conflicts",
-            command = "git diff --name-only --diff-filter=U --relative",
-            previewer = easypick.previewers.file_diff(),
-          },
-        }
-      end,
-      keys = {
-        { "<leader>se", "<cmd>:Easypick<cr>", desc = "[e]asypickers" },
-      },
-    },
-    {
-      "isak102/telescope-git-file-history.nvim",
-      dependencies = { "tpope/vim-fugitive" },
-    },
+    "nvim-tree/nvim-web-devicons",
   },
   config = function()
-    -- -- https://github.com/nvim-telescope/telescope.nvim/issues/3439
-    -- -- Silence the deprecation for telescope, as it is fixed in master but still waiting for a new release
-    -- local deprecate_original = vim.deprecate
-    -- ---@diagnostic disable-next-line: duplicate-set-field
-    -- vim.deprecate = function(msg, ...)
-    --   local trace = debug.traceback()
-    --   if trace:match("telescope.nvim") then
-    --     if msg:match("vim.lsp.util.jump_to_location") then
-    --       return
-    --     end
-    --   end
-    --
-    --   return deprecate_original(msg, ...)
-    -- end
-    --
-    -- -- https://github.com/nvim-telescope/telescope.nvim/issues/3439
-    -- -- Silence the specific position encoding message, as it is fixed in master but still waiting for a new release
-    -- local notify_original = vim.notify
-    -- ---@diagnostic disable-next-line: duplicate-set-field
-    -- vim.notify = function(msg, ...)
-    --   local trace = debug.traceback()
-    --   if trace:match("telescope.nvim") then
-    --     if
-    --       msg:match(
-    --         "position_encoding param is required in vim.lsp.util.make_position_params. Defaulting to position encoding of the first client."
-    --       )
-    --     then
-    --       return
-    --     end
-    --   end
-    --
-    --   return notify_original(msg, ...)
-    -- end
+    local fzf = require("fzf-lua")
 
-    require("telescope").setup({
-      defaults = {
-        file_ignore_patterns = { ".git/.*", ".*.crt", "%.pem" },
-        path_display = { "filename_first" },
-        layout_strategy = "vertical",
-        layout_config = {
-          width = 0.9,
-          height = 0.9,
-          preview_cutoff = 0,
-        },
-      },
-      pickers = {
-        find_files = {
-          find_command = { "fd", "--type", "f" },
-        },
-        buffers = {
-          show_all_buffers = true,
-          sort_mru = true,
-          mappings = {
-            i = {
-              ["<c-d>"] = "delete_buffer",
-            },
-          },
-        },
-      },
-      extensions = {
-        ["ui-select"] = {
-          require("telescope.themes").get_dropdown(),
+    fzf.setup({
+      "telescope",
+      winopts = {
+        height = 1,
+        width = 1,
+        preview = {
+          layout = "vertical",
+          vertical = "up:60%", -- similar to telescope vertical layout
         },
       },
     })
 
-    pcall(require("telescope").load_extension, "fzf")
-    pcall(require("telescope").load_extension, "ui-select")
-    pcall(require("telescope").load_extension, "git_file_history")
-
-    local builtin = require("telescope.builtin")
-    vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "[h]elp" })
-    vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "[k]eymaps" })
-    vim.keymap.set("n", "<leader>st", builtin.builtin, { desc = "[t]elescope" })
-    vim.keymap.set("n", "<leader>sc", builtin.grep_string, { desc = "[c]urrent word" })
-    vim.keymap.set("n", "<leader>sw", builtin.live_grep, { desc = "[w]ord" })
-    vim.keymap.set("n", "<leader>sg", builtin.git_status, { desc = "[g]it status" })
-    vim.keymap.set("n", "<leader>sd", builtin.diagnostics, { desc = "[d]iagnostics" })
-    vim.keymap.set("n", "<leader>sr", builtin.resume, { desc = "[r]esume" })
-    vim.keymap.set("n", "<leader>s.", builtin.oldfiles, { desc = "recent files" })
-    vim.keymap.set("n", "<leader>sb", builtin.buffers, { desc = "[b]uffers" })
-    vim.keymap.set(
-      "n",
-      "<leader>gh",
-      require("telescope").extensions.git_file_history.git_file_history,
-      { desc = "[h]istory" }
-    )
-    vim.keymap.set("n", "<leader>/", function()
-      builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
-        winblend = 10,
-        previewer = false,
-      }))
-    end, { desc = "fuzzily search in current buffer" })
-    vim.keymap.set("n", "<leader>s/", function()
-      builtin.live_grep({
-        grep_open_files = true,
-        prompt_title = "Live Grep in Open Files",
-      })
+    -- KEYMAPS
+    local map = vim.keymap.set
+    map("n", "<leader>sh", fzf.help_tags, { desc = "[h]elp" })
+    map("n", "<leader>sk", fzf.keymaps, { desc = "[k]eymaps" })
+    map("n", "<leader>sp", fzf.builtin, { desc = "[p]ickers" })
+    map("n", "<leader>sc", fzf.grep_cword, { desc = "[c]urrent word" })
+    map("n", "<leader>sw", fzf.live_grep, { desc = "[w]ord" })
+    map("n", "<leader>sg", fzf.git_status, { desc = "[g]it status" })
+    map("n", "<leader>sd", fzf.diagnostics_workspace, { desc = "[d]iagnostics" })
+    map("n", "<leader>sr", fzf.resume, { desc = "[r]esume" })
+    map("n", "<leader>s.", fzf.oldfiles, { desc = "recent files" })
+    map("n", "<leader>sb", fzf.buffers, { desc = "[b]uffers" })
+    map("n", "<leader>/", function()
+      fzf.blines({ fzf_opts = { ["--layout"] = "reverse-list" }, previewer = false })
+    end, { desc = "fuzzy search current buffer" })
+    map("n", "<leader>s/", function()
+      fzf.live_grep({ rg_opts = "--no-heading --with-filename --line-number --column --smart-case" })
     end, { desc = "[/] in open files" })
-    vim.keymap.set("n", "<leader>sn", function()
-      builtin.find_files({ cwd = vim.fn.stdpath("config") })
+    map("n", "<leader>sn", function()
+      fzf.files({ cwd = vim.fn.stdpath("config") })
     end, { desc = "[n]eovim files" })
+    map("n", "<leader>sf", function()
+      fzf.files({ hidden = true })
+    end, { desc = "[s]earch [f]iles" })
 
-    leaderKeymap("[s]earch [f]iles", function()
-      builtin.find_files({ hidden = true })
-    end)
+    -- Optional: simulate your easypick.nvim pickers with custom commands
+    vim.api.nvim_create_user_command("FzfLastCommit", function()
+      fzf.files({
+        cmd = "git diff --name-only HEAD HEAD~1 --relative",
+        previewer = "git_diff",
+      })
+    end, {})
+    vim.api.nvim_create_user_command("FzfConflicts", function()
+      fzf.files({
+        cmd = "git diff --name-only --diff-filter=U --relative",
+        previewer = "git_diff",
+      })
+    end, {})
+    vim.keymap.set("n", "<leader>se", "<cmd>FzfLastCommit<cr>", { desc = "[e]asypickers (last commit)" })
   end,
 })
 
@@ -780,16 +690,18 @@ plugin({
           vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = desc })
         end
 
-        map("<leader>ld", require("telescope.builtin").lsp_definitions, "[L]sp [d]efinition")
+        local fzf = require("fzf-lua")
+
+        map("<leader>ld", fzf.lsp_definitions, "[L]sp [d]efinition")
         map("<leader>lD", vim.lsp.buf.declaration, "[L]sp [D]eclaration")
 
         map("<leader>lR", function()
-          require("telescope.builtin").lsp_references({ show_line = false })
+          fzf.lsp_references({ show_line = false })
         end, "[L]sp [R]eferences")
 
-        map("<leader>lI", require("telescope.builtin").lsp_implementations, "[L]sp [I]mplementation")
+        map("<leader>lI", fzf.lsp_implementations, "[L]sp [I]mplementation")
 
-        map("<leader>lt", require("telescope.builtin").lsp_type_definitions, "[L]sp [t]ype definition")
+        map("<leader>lt", fzf.lsp_typedefs, "[L]sp [t]ype definition")
 
         map("<leader>lr", vim.lsp.buf.rename, "[L]sp [r]ename")
 
