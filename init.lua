@@ -123,12 +123,22 @@ local whichkeyGroups = {
   { "<leader>u", group = "[u]ndo" },
 }
 
-local function leaderKeymap(desc, func)
+local function leaderKeymap(desc, func, modes)
+  modes = modes or {"n"}  -- Default to normal mode if not specified
+  -- Convert single mode to array for consistent handling
+  if type(modes) == "string" then
+    modes = {modes}
+  end
+  
   local keys = ""
   for value in string.gmatch(desc, "%[(.)%]") do
     keys = keys .. value
   end
-  vim.keymap.set("n", "<Leader>" .. keys, func, { desc = desc })
+  
+  -- Set keymap for each mode
+  for _, mode in ipairs(modes) do
+    vim.keymap.set(mode, "<Leader>" .. keys, func, { desc = desc })
+  end
 
   for i = 1, string.len(keys) - 1 do
     local value = string.sub(keys, 1, i)
