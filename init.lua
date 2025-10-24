@@ -124,17 +124,17 @@ local whichkeyGroups = {
 }
 
 local function leaderKeymap(desc, func, modes)
-  modes = modes or {"n"}  -- Default to normal mode if not specified
+  modes = modes or { "n" } -- Default to normal mode if not specified
   -- Convert single mode to array for consistent handling
   if type(modes) == "string" then
-    modes = {modes}
+    modes = { modes }
   end
-  
+
   local keys = ""
   for value in string.gmatch(desc, "%[(.)%]") do
     keys = keys .. value
   end
-  
+
   -- Set keymap for each mode
   for _, mode in ipairs(modes) do
     vim.keymap.set(mode, "<Leader>" .. keys, func, { desc = desc })
@@ -950,10 +950,17 @@ plugin({
       end,
       expr = true,
       desc = "Goto/Apply Next Edit Suggestion",
+      -- insert mode only
+      mode = "i",
     },
     {
       "<C-.>",
       function()
+        --open or focus the sidekick cursor CLI
+        if vim.fn.bufwinnr("Sidekick - Cursor") ~= -1 then
+          require("sidekick").focus("cursor")
+          return
+        end
         require("sidekick.cli").toggle({ name = "cursor", focus = true })
       end,
       desc = "Sidekick Toggle Cursor",
@@ -1005,8 +1012,44 @@ plugin({
       mode = { "n", "x" },
       desc = "Sidekick Select Prompt",
     },
-    -- Example of a keybinding to open Claude directly
   },
+})
+
+plugin({
+  "swaits/zellij-nav.nvim",
+  lazy = true,
+  event = "VeryLazy",
+  keys = {
+    {
+      "<c-h>",
+      function()
+        require("zellij-nav").left()
+      end,
+      { silent = true, desc = "navigate left or tab" },
+    },
+    {
+      "<c-j>",
+      function()
+        require("zellij-nav").down()
+      end,
+      { silent = true, desc = "navigate down" },
+    },
+    {
+      "<c-k>",
+      function()
+        require("zellij-nav").up()
+      end,
+      { silent = true, desc = "navigate up" },
+    },
+    {
+      "<c-l>",
+      function()
+        require("zellij-nav").right()
+      end,
+      { silent = true, desc = "navigate right or tab" },
+    },
+  },
+  opts = {},
 })
 
 require("lazy").setup(plugins)
