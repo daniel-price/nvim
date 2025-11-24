@@ -1,3 +1,5 @@
+local M = {}
+
 local function pathIsElmFile(path)
   return string.match(path, ".*%.elm")
 end
@@ -29,7 +31,7 @@ local function getBufferName()
   return string.gsub(bufferPath, "%s+", "")
 end
 
-local function ToggleTest()
+M.ToggleTest = function()
   local bufferPath = getBufferName()
 
   if pathIsTypescriptFile(bufferPath) then
@@ -74,7 +76,7 @@ local function ToggleTest()
   print("Unknown file type")
 end
 
-local function ToggleHtml()
+M.ToggleHtml = function()
   local bufferPath = getBufferName()
   local isHtmlFile = string.match(bufferPath, ".*%.component%.html")
   if isHtmlFile then
@@ -103,11 +105,11 @@ local function stripWhitespace(str)
 end
 
 local function getMarkedPaneId()
-  local paneId = stripWhitespace(vim.fn.system('tmux display -p -t "~" "#D"'))
+  local paneId = stripWhitespace(vim.fn.system('zellij list-sessions --format json | jq -r ".[0].name"'))
   if paneId == nil or paneId == "" then
-    local newPaneId = stripWhitespace(vim.fn.system('tmux split-window -d -h -P -F "#{pane_id}"'))
+    local newPaneId = stripWhitespace(vim.fn.system('zellij new-session --name "neovim" --print-session-name'))
 
-    vim.fn.system("tmux select-pane -m -t " .. newPaneId)
+    vim.fn.system("zellij attach " .. newPaneId)
     return newPaneId
   end
   return paneId
@@ -116,20 +118,20 @@ end
 local function runInPane(cmd)
   local paneId = getMarkedPaneId()
 
-  vim.fn.system(
-    "(tmux send-keys -t " .. paneId .. " -X cancel || true) && tmux send-keys -t " .. paneId .. ' "' .. cmd .. '" Enter'
-  )
+  print("Running in pane: " .. paneId .. " command: " .. cmd)
+
+  vim.fn.system("zellij send --session " .. paneId .. " -- " .. cmd)
 end
 
-local function TmuxOpen()
+M.ZellijOpen = function()
   runInPane("")
 end
 
-local function TmuxRepeat()
+M.ZellijRepeat = function()
   runInPane("Up")
 end
 
-local function SearchInfrastructure()
+M.SearchInfrastructure = function()
   local bufferPath = getBufferName()
 
   local searchString = string.match(bufferPath, ".*(src.*).ts")
@@ -140,7 +142,7 @@ local function SearchInfrastructure()
   require("telescope.builtin").grep_string({ search = searchString .. ".handler" })
 end
 
-local function InsertGuid()
+M.InsertGuid = function()
   local template = "xxxxxxxx"
   local guid = string.gsub(template, "[xy]", function(c)
     local v = (c == "x") and math.random(0, 0xf) or math.random(8, 0xb)
@@ -161,12 +163,12 @@ local function InsertGuid()
   vim.api.nvim_set_current_line(nline)
 end
 
-local function CopyPath()
+M.CopyPath = function()
   local filepath = vim.fn.expand("%")
   vim.fn.setreg("+", filepath)
 end
 
-function DeleteQuickfixItems()
+M.DeleteQuickfixItems = function()
   local mode = vim.api.nvim_get_mode()["mode"]
 
   local start_idx
@@ -207,13 +209,10 @@ function DeleteQuickfixItems()
   vim.fn.cursor(start_idx, 1)
 end
 
-return {
-  ToggleTest = ToggleTest,
-  ToggleHtml = ToggleHtml,
-  TmuxOpen = TmuxOpen,
-  TmuxRepeat = TmuxRepeat,
-  SearchInfrastructure = SearchInfrastructure,
-  InsertGuid = InsertGuid,
-  CopyPath = CopyPath,
-  DeleteQuickfixItems = DeleteQuickfixItems,
-}
+M.OpenZellijPane = function()
+  --print vim.env table
+  print(vim.inspect(vim.env))
+  vim.fn.system("zellij action new-pane --direction Right && zellij action focus-previous-pane")
+end
+
+return M

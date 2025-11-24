@@ -119,8 +119,9 @@ local whichkeyGroups = {
   { "<leader>q", group = "[q]uickfix" },
   { "<leader>r", group = "[r]efactor" },
   { "<leader>s", group = "[s]earch" },
-  { "<leader>t", group = "[t]mux / [t]oggle" },
+  { "<leader>t", group = "[t]oggle" },
   { "<leader>u", group = "[u]ndo" },
+  { "<leader>z", group = "[z]ellij" },
 }
 
 local function leaderKeymap(desc, func, modes)
@@ -163,8 +164,6 @@ leaderKeymap("[q]uickfix [n]ext", "<cmd>cnext<cr>")
 
 -- Terminal/Toggle
 local functions = require("functions")
-leaderKeymap("[t]mux [o]pen", functions.TmuxOpen)
-leaderKeymap("[t]mux [r]epeat", functions.TmuxRepeat)
 leaderKeymap("[t]oggle [t]est", functions.ToggleTest)
 leaderKeymap("[t]oggle [h]tml", functions.ToggleHtml)
 
@@ -538,22 +537,6 @@ plugin({ -- Collection of various small independent plugins/modules
       return "%2l:%-2v"
     end
   end,
-})
-
-plugin({
-  "alexghergh/nvim-tmux-navigation",
-  keys = function()
-    local p = require("nvim-tmux-navigation")
-    return {
-      { "<C-h>", p.NvimTmuxNavigateLeft, desc = "navigate [l]eft" },
-      { "<C-j>", p.NvimTmuxNavigateDown, desc = "navigate [d]own" },
-      { "<C-k>", p.NvimTmuxNavigateUp, desc = "navigate [u]p" },
-      { "<C-l>", p.NvimTmuxNavigateRight, desc = "navigate [r]ight" },
-    }
-  end,
-  opts = {
-    disable_when_zoomed = true,
-  },
 })
 
 plugin({
@@ -1051,5 +1034,8 @@ plugin({
   },
   opts = {},
 })
+
+leaderKeymap("[z]ellij [o]pen", functions.OpenZellijPane)
+leaderKeymap("[z]ellij [r]epeat", functions.ZellijRepeat)
 
 require("lazy").setup(plugins)
