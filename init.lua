@@ -201,8 +201,8 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.keymap.set("n", "<ESC>", "<CMD>cclose<CR>", { buffer = true, remap = false, silent = true })
 
     -- `dd` deletes an item from the list.
-    vim.keymap.set("n", "dd", DeleteQuickfixItems, { buffer = true })
-    vim.keymap.set("x", "d", DeleteQuickfixItems, { buffer = true })
+    vim.keymap.set("n", "dd", functions.DeleteQuickfixItems, { buffer = true })
+    vim.keymap.set("x", "d", functions.DeleteQuickfixItems, { buffer = true })
   end,
   desc = "Quickfix tweaks",
 })
