@@ -215,4 +215,10 @@ M.OpenZellijPane = function()
   vim.fn.system("zellij action new-pane --direction Right && zellij action focus-previous-pane")
 end
 
+M.NeovimUpdate = function()
+  vim.api.nvim_command("MasonUpdate")
+  vim.api.nvim_command("Lazy update")
+  vim.api.nvim_command("TSUpdate")
+end
+
 return M

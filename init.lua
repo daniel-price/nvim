@@ -115,6 +115,7 @@ local whichkeyGroups = {
   { "<leader>gs", group = "[s]tage" },
   { "<leader>gt", group = "[t]oggle" },
   { "<leader>l", group = "[l]sp" },
+  { "<leader>n", group = "[n]eovim" },
   { "<leader>lt", group = "[t]ype" },
   { "<leader>q", group = "[q]uickfix" },
   { "<leader>r", group = "[r]efactor" },
@@ -151,8 +152,7 @@ local function leaderKeymap(desc, func, modes)
       end
     end
     if not whichKeyGroup then
-      print("No which key group for " .. value .. " in " .. desc)
-      print("Error in init.lua!")
+      print("ERROR: No which key group for " .. value .. " in " .. desc .. ". Add to whichkeyGroups.")
     end
   end
 end
@@ -1037,5 +1037,7 @@ plugin({
 
 leaderKeymap("[z]ellij [o]pen", functions.OpenZellijPane)
 leaderKeymap("[z]ellij [r]epeat", functions.ZellijRepeat)
+
+leaderKeymap("[n]eovim [u]pdate", functions.NeovimUpdate)
 
 require("lazy").setup(plugins)
