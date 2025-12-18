@@ -601,58 +601,15 @@ plugin({ "almo7aya/openingh.nvim" })
 ----- LANGUAGES -----
 ---------------------
 
-local treesitter_installs = {}
-local mason_servers = {}
-local lsp_servers = {}
-local formatters_by_ft = {}
+local treesitter_installs = languages.treesitter_installs
+local mason_servers = languages.mason_tools
+local lsp_servers = languages.lsp_servers
+local formatters_by_ft = languages.formatters_by_ft
 
 debugPrint("Treesitter installs: ", vim.inspect(treesitter_installs))
-debugPrint("Mason servers: ", mason_servers)
-debugPrint("LSP servers: ", lsp_servers)
-debugPrint("Formatters by filetype: ", formatters_by_ft)
-
--- Loop through languages
-debugPrint("Setting up languages...")
-debugPrint(vim.inspect(languages))
-for fileType, config in pairs(languages) do
-  if config.treesitter_config then
-    table.insert(treesitter_installs, config.treesitter_config)
-  elseif fileType ~= "other" then
-    -- If no treesitter is specified, use the fileType as the default
-    table.insert(treesitter_installs, fileType)
-  end
-
-  if config.mason_config then
-    for server, opts in pairs(config.mason_config) do
-      mason_servers[server] = opts
-    end
-  end
-
-  if config.lspconfig_config then
-    for server, opts in pairs(config.lspconfig_config) do
-      lsp_servers[server] = opts
-    end
-  end
-
-  if config.conform_config then
-    debugPrint("Adding conform config for fileType: " .. fileType, config.conform_config)
-    formatters_by_ft[fileType] = {}
-    for formatter, conform_config in pairs(config.conform_config) do
-      if type(conform_config) == "table" and conform_config.install then
-        if type(formatter) ~= "string" then
-          error(fileType .. ": Formatter must be a string, got: " .. type(formatter))
-        end
-        table.insert(formatters_by_ft[fileType], formatter)
-        mason_servers[formatter] = {}
-      else
-        if type(conform_config) ~= "string" then
-          error(fileType .. ": Formatter must be a string, got: " .. type(conform_config))
-        end
-        table.insert(formatters_by_ft[fileType], conform_config)
-      end
-    end
-  end
-end
+debugPrint("Mason servers/tools: ", vim.inspect(mason_servers))
+debugPrint("LSP servers: ", vim.inspect(lsp_servers))
+debugPrint("Formatters by filetype: ", vim.inspect(formatters_by_ft))
 
 plugin({
   -- Main LSP Configuration

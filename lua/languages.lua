@@ -1,149 +1,159 @@
-local languages = {}
-
-Language = {}
-
----@param language string
-function Language:new(language)
-  local instance = setmetatable({}, { __index = self })
-  languages[language] = instance
-  return instance
-end
-
----@param config table<string, any>
-function Language:mason(config)
-  self.mason_config = config
-  return self
-end
-
----@param config table<string, any>
-function Language:lspconfig(config)
-  self.lspconfig_config = config
-  return self
-end
-
----@param config table<string, { install: boolean }>
-function Language:conform(config)
-  self.conform_config = config
-  return self
-end
-
----@param config string
-function Language:treesitter(config)
-  self.treesitter_config = config
-  return self
-end
-
-Language:new("angular"):mason({ ["angular-language-server"] = {} })
-
-Language:new("astro"):mason({ ["astro-language-server"] = {} }):conform({ prettierd = { install = true } })
-
-Language:new("css"):mason({ ["css-lsp"] = {} }):conform({ prettierd = { install = true } })
-
-Language:new("diff")
-
-Language:new("html"):conform({ prettierd = { install = true } })
-
-Language:new("luadoc")
-
-Language:new("markdown")
-
-Language:new("markdown_inline")
-
-Language:new("query")
-
-Language:new("vim")
-
-Language:new("vimdoc")
-
-Language:new("elm"):mason({ ["elm-language-server"] = {} }):conform({ "elm_format" })
-
-Language:new("gleam"):conform({ "gleam" }):lspconfig({ gleam = {} })
-
-Language:new("javascript"):mason({ ["js-debug-adapter"] = {} }):conform({ prettierd = { install = true } })
-
-Language:new("json"):conform({ prettierd = { install = true } })
-
-Language:new("jsonc"):conform({ prettierd = { install = true } })
-
-Language:new("typescript")
-  :mason({
-    eslint = {
-      {
-        on_attach = function(_, bufnr)
-          vim.api.nvim_create_autocmd("BufWritePre", {
-            buffer = bufnr,
-            command = "EslintFixAll",
-          })
-        end,
-      },
-    },
-  })
-  :conform({ prettierd = { install = true } })
-
-Language:new("lua")
-  :mason({
-    lua_ls = {
-      settings = {
-        Lua = {
-          completion = {
-            callSnippet = "Replace",
-          },
-        },
-      },
-    },
-    stylua = {},
-  })
-  :conform({ stylua = { install = true } })
-
-Language:new("ruby"):mason({ ruby_lsp = {} }):conform({ "rubocop" })
-
-Language:new("rust")
-  :mason({
-    rust_analyzer = {
-      settings = {
-        ["rust-analyzer"] = {
-          check = {
-            command = "clippy",
-          },
-        },
-      },
-    },
-  })
-  :conform({ "rustfmt" })
-
-Language:new("sh")
-  :mason({
-    shellcheck = {},
-    ["bash-language-server"] = {},
-  })
-  :conform({ shfmt = { install = true } })
-  :treesitter("bash")
-
-Language:new("sql"):mason({
-  sqlfmt = {},
-  sqlls = {},
-})
-
-Language:new("kdl"):conform({ "kdlfmt" })
-
--- LSPs with no TS config
-Language:new("other"):mason({
-  ["harper-ls"] = {},
-  ["herb-language-server"] = {},
-})
+-- This module defines language-specific config, then exports fully-aggregated
+-- data structures consumed by plugin setup:
+-- - `treesitter_installs`: list of parsers
+-- - `mason_tools`: map of mason packages to config (also used to derive ensure_installed)
+-- - `lsp_servers`: map of lsp server name -> opts for vim.lsp.config()
+-- - `formatters_by_ft`: conform.nvim formatters_by_ft
 
 vim.filetype.add({
   extension = {
-    ["herb"] = "html",
+    herb = "html",
   },
 })
 
-Language:new("embedded_template"):lspconfig({
-  ["herb_ls"] = {
-    cmd = { "herb-language-server", "--stdio" },
-    filetypes = { "html", "ruby", "eruby", "herb" },
-    root_markers = { "Gemfile", ".git" },
-  },
-})
+---@class LanguageConfig
+---@field treesitter? string
+---@field mason? table<string, any>
+---@field lsp? table<string, any>
+---@field conform? table<any, any> -- supports both list-style { "tool" } and map-style { tool = { install = true } }
 
-return languages
+---@type table<string, LanguageConfig>
+local langs = {
+  angular = { mason = { ["angular-language-server"] = {} } },
+  astro = { mason = { ["astro-language-server"] = {} }, conform = { prettierd = { install = true } } },
+  css = { mason = { ["css-lsp"] = {} }, conform = { prettierd = { install = true } } },
+  diff = {},
+  html = { conform = { prettierd = { install = true } } },
+  luadoc = {},
+  markdown = {},
+  markdown_inline = {},
+  query = {},
+  vim = {},
+  vimdoc = {},
+  elm = { mason = { ["elm-language-server"] = {} }, conform = { "elm_format" } },
+  gleam = { lsp = { gleam = {} }, conform = { "gleam" } },
+  javascript = { mason = { ["js-debug-adapter"] = {} }, conform = { prettierd = { install = true } } },
+  json = { conform = { prettierd = { install = true } } },
+  jsonc = { conform = { prettierd = { install = true } } },
+  typescript = {
+    mason = {
+      eslint = {
+        {
+          on_attach = function(_, bufnr)
+            vim.api.nvim_create_autocmd("BufWritePre", {
+              buffer = bufnr,
+              command = "EslintFixAll",
+            })
+          end,
+        },
+      },
+    },
+    conform = { prettierd = { install = true } },
+  },
+  lua = {
+    mason = {
+      lua_ls = {
+        settings = {
+          Lua = {
+            completion = { callSnippet = "Replace" },
+          },
+        },
+      },
+      stylua = {},
+    },
+    conform = { stylua = { install = true } },
+  },
+  ruby = { mason = { ruby_lsp = {} }, conform = { "rubocop" } },
+  rust = {
+    mason = {
+      rust_analyzer = {
+        settings = {
+          ["rust-analyzer"] = {
+            check = { command = "clippy" },
+          },
+        },
+      },
+    },
+    conform = { "rustfmt" },
+  },
+  sh = {
+    treesitter = "bash",
+    mason = { shellcheck = {}, ["bash-language-server"] = {} },
+    conform = { shfmt = { install = true } },
+  },
+  sql = { mason = { sqlfmt = {}, sqlls = {} } },
+  kdl = { conform = { "kdlfmt" } },
+
+  -- extra tools / servers with no treesitter ft config
+  other = { mason = { ["harper-ls"] = {}, ["herb-language-server"] = {} } },
+
+  -- Used by vim's builtin ft detection for .ejs etc; keep lsp config here.
+  embedded_template = {
+    lsp = {
+      herb_ls = {
+        cmd = { "herb-language-server", "--stdio" },
+        filetypes = { "html", "ruby", "eruby", "herb" },
+        root_markers = { "Gemfile", ".git" },
+      },
+    },
+  },
+}
+
+local M = {
+  ---@type string[]
+  treesitter_installs = {},
+  ---@type table<string, any>
+  mason_tools = {},
+  ---@type table<string, any>
+  lsp_servers = {},
+  ---@type table<string, string[]>
+  formatters_by_ft = {},
+}
+
+for ft, cfg in pairs(langs) do
+  if ft ~= "other" then
+    table.insert(M.treesitter_installs, cfg.treesitter or ft)
+  end
+
+  if cfg.mason then
+    for tool, opts in pairs(cfg.mason) do
+      M.mason_tools[tool] = opts
+    end
+  end
+
+  if cfg.lsp then
+    for server, opts in pairs(cfg.lsp) do
+      M.lsp_servers[server] = opts
+    end
+  end
+
+  if cfg.conform then
+    M.formatters_by_ft[ft] = {}
+
+    for key, value in pairs(cfg.conform) do
+      -- list-style: { "rubocop" }
+      if type(key) == "number" then
+        if type(value) ~= "string" then
+          error(ft .. ": formatter must be a string, got: " .. type(value))
+        end
+        table.insert(M.formatters_by_ft[ft], value)
+      else
+        -- map-style: { prettierd = { install = true } } OR { prettierd = "prettierd" }
+        if type(value) == "table" and value.install then
+          if type(key) ~= "string" then
+            error(ft .. ": formatter name must be a string, got: " .. type(key))
+          end
+          table.insert(M.formatters_by_ft[ft], key)
+          M.mason_tools[key] = M.mason_tools[key] or {}
+        else
+          if type(value) ~= "string" then
+            error(ft .. ": formatter must be a string, got: " .. type(value))
+          end
+          table.insert(M.formatters_by_ft[ft], value)
+        end
+      end
+    end
+  end
+end
+
+return M
