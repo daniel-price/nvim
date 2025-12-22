@@ -6,8 +6,6 @@ local languages = require("languages")
 
 local DEBUG = false
 
-local COPILOT_NODE_PATH = vim.fn.expand("$HOME") .. "/.local/share/mise/installs/node/22.14.0/bin/node"
-
 ---------------------
 ------ FUNCTIONS ----
 ---------------------
@@ -88,6 +86,7 @@ vim.opt.includeexpr = "substitute(v:fname, '\\v\\.(handler|queueHandler)', '.ts'
 
 vim.diagnostic.config({
   virtual_text = false, -- Turn off inline diagnostics
+  jump = { float = true }, -- Show diagnostics in a floating window when jumping between them
 })
 
 ---------------------
@@ -100,9 +99,6 @@ vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 -- Previous/next mappings
 vim.keymap.set("n", "<S-Tab>", "<cmd>bprev<CR>", { desc = "Previous buffer" })
 vim.keymap.set("n", "<Tab>", "<cmd>bnext<CR>", { desc = "Next buffer" })
-
--- Show diagnostics in a floating window when moving between diagnostics using ]d and [d
-vim.diagnostic.config({ jump = { float = true } })
 
 -- Document existing key chains
 local whichkeyGroups = {
@@ -125,23 +121,18 @@ local whichkeyGroups = {
   { "<leader>z", group = "[z]ellij" },
 }
 
-local function leaderKeymap(desc, func, modes)
-  modes = modes or { "n" } -- Default to normal mode if not specified
-  -- Convert single mode to array for consistent handling
-  if type(modes) == "string" then
-    modes = { modes }
-  end
-
+local function parseLeaderKeys(desc, who)
   local keys = ""
   for value in string.gmatch(desc, "%[(.)%]") do
     keys = keys .. value
   end
-
-  -- Set keymap for each mode
-  for _, mode in ipairs(modes) do
-    vim.keymap.set(mode, "<Leader>" .. keys, func, { desc = desc })
+  if keys == "" then
+    error((who or "keymap") .. ": no [x] keys found in desc: " .. desc)
   end
+  return keys
+end
 
+local function validateWhichKeyPrefixes(desc, keys)
   for i = 1, string.len(keys) - 1 do
     local value = string.sub(keys, 1, i)
     local whichKeyGroup = nil
@@ -155,6 +146,46 @@ local function leaderKeymap(desc, func, modes)
       print("ERROR: No which key group for " .. value .. " in " .. desc .. ". Add to whichkeyGroups.")
     end
   end
+end
+
+local function leaderKeymap(desc, func, modes)
+  modes = modes or { "n" } -- Default to normal mode if not specified
+  -- Convert single mode to array for consistent handling
+  if type(modes) == "string" then
+    modes = { modes }
+  end
+
+  local keys = parseLeaderKeys(desc, "leaderKeymap")
+
+  -- Set keymap for each mode
+  for _, mode in ipairs(modes) do
+    vim.keymap.set(mode, "<Leader>" .. keys, func, { desc = desc })
+  end
+
+  validateWhichKeyPrefixes(desc, keys)
+end
+
+-- Helper to generate Lazy.nvim `keys = { ... }` entries using the same
+-- `[x]`-style descriptions as `leaderKeymap`, but without eagerly requiring
+-- plugin modules.
+--
+-- Usage examples:
+--   keys = {
+--     lazyLeaderKeymap("[s]earch [h]elp", function()
+--       require("fzf-lua").help_tags()
+--     end),
+--     lazyLeaderKeymap("[u]ndo [t]ree", "<cmd>UndotreeToggle<cr>"),
+--   }
+local function lazyLeaderKeymap(desc, rhs, opts)
+  opts = opts or {}
+
+  local keys = parseLeaderKeys(desc, "lazyLeaderKeymap")
+  validateWhichKeyPrefixes(desc, keys)
+
+  local o = vim.tbl_extend("force", {}, opts)
+  o.desc = o.desc or desc
+  o.mode = o.mode or "n"
+  return vim.tbl_extend("force", { "<leader>" .. keys, rhs }, o)
 end
 
 -- Quickfix
@@ -314,6 +345,116 @@ plugin({
   dependencies = {
     "nvim-tree/nvim-web-devicons",
   },
+  keys = {
+    {
+      "<leader>sh",
+      function()
+        require("fzf-lua").help_tags()
+      end,
+      desc = "[h]elp",
+    },
+    {
+      "<leader>sk",
+      function()
+        require("fzf-lua").keymaps()
+      end,
+      desc = "[k]eymaps",
+    },
+    {
+      "<leader>sp",
+      function()
+        require("fzf-lua").builtin()
+      end,
+      desc = "[p]ickers",
+    },
+    {
+      "<leader>sc",
+      function()
+        require("fzf-lua").grep_cword()
+      end,
+      desc = "[c]urrent word",
+    },
+    {
+      "<leader>sw",
+      function()
+        require("fzf-lua").live_grep()
+      end,
+      desc = "[w]ord",
+    },
+    {
+      "<leader>sg",
+      function()
+        require("fzf-lua").git_status()
+      end,
+      desc = "[g]it status",
+    },
+    {
+      "<leader>sd",
+      function()
+        require("fzf-lua").diagnostics_workspace()
+      end,
+      desc = "[d]iagnostics",
+    },
+    {
+      "<leader>sr",
+      function()
+        require("fzf-lua").resume()
+      end,
+      desc = "[r]esume",
+    },
+    {
+      "<leader>s.",
+      function()
+        require("fzf-lua").oldfiles()
+      end,
+      desc = "recent files",
+    },
+    {
+      "<leader>sb",
+      function()
+        require("fzf-lua").buffers()
+      end,
+      desc = "[b]uffers",
+    },
+    {
+      "<leader>/",
+      function()
+        require("fzf-lua").blines({ fzf_opts = { ["--layout"] = "reverse-list" }, previewer = false })
+      end,
+      desc = "fuzzy search current buffer",
+    },
+    {
+      "<leader>s/",
+      function()
+        require("fzf-lua").live_grep({ rg_opts = "--no-heading --with-filename --line-number --column --smart-case" })
+      end,
+      desc = "[/] in open files",
+    },
+    {
+      "<leader>sn",
+      function()
+        require("fzf-lua").files({ cwd = vim.fn.stdpath("config") })
+      end,
+      desc = "[n]eovim files",
+    },
+    {
+      "<leader>sf",
+      function()
+        require("fzf-lua").files({ hidden = true })
+      end,
+      desc = "[s]earch [f]iles",
+    },
+    {
+      "<leader>se",
+      function()
+        require("fzf-lua").files({
+          cmd = "git diff --name-only HEAD HEAD~1 --relative",
+          previewer = "git_diff",
+        })
+      end,
+      desc = "[e]asypickers (last commit)",
+    },
+  },
   config = function()
     local fzf = require("fzf-lua")
 
@@ -329,31 +470,6 @@ plugin({
       },
     })
 
-    -- KEYMAPS
-    local map = vim.keymap.set
-    map("n", "<leader>sh", fzf.help_tags, { desc = "[h]elp" })
-    map("n", "<leader>sk", fzf.keymaps, { desc = "[k]eymaps" })
-    map("n", "<leader>sp", fzf.builtin, { desc = "[p]ickers" })
-    map("n", "<leader>sc", fzf.grep_cword, { desc = "[c]urrent word" })
-    map("n", "<leader>sw", fzf.live_grep, { desc = "[w]ord" })
-    map("n", "<leader>sg", fzf.git_status, { desc = "[g]it status" })
-    map("n", "<leader>sd", fzf.diagnostics_workspace, { desc = "[d]iagnostics" })
-    map("n", "<leader>sr", fzf.resume, { desc = "[r]esume" })
-    map("n", "<leader>s.", fzf.oldfiles, { desc = "recent files" })
-    map("n", "<leader>sb", fzf.buffers, { desc = "[b]uffers" })
-    map("n", "<leader>/", function()
-      fzf.blines({ fzf_opts = { ["--layout"] = "reverse-list" }, previewer = false })
-    end, { desc = "fuzzy search current buffer" })
-    map("n", "<leader>s/", function()
-      fzf.live_grep({ rg_opts = "--no-heading --with-filename --line-number --column --smart-case" })
-    end, { desc = "[/] in open files" })
-    map("n", "<leader>sn", function()
-      fzf.files({ cwd = vim.fn.stdpath("config") })
-    end, { desc = "[n]eovim files" })
-    map("n", "<leader>sf", function()
-      fzf.files({ hidden = true })
-    end, { desc = "[s]earch [f]iles" })
-
     -- Optional: simulate your easypick.nvim pickers with custom commands
     vim.api.nvim_create_user_command("FzfLastCommit", function()
       fzf.files({
@@ -367,7 +483,6 @@ plugin({
         previewer = "git_diff",
       })
     end, {})
-    vim.keymap.set("n", "<leader>se", "<cmd>FzfLastCommit<cr>", { desc = "[e]asypickers (last commit)" })
   end,
 })
 
@@ -423,7 +538,6 @@ plugin({ -- Autocompletion
       lazy = false,
       opts = {
         suggestion = { auto_trigger = true, debounce = 150 },
-        copilot_node_command = COPILOT_NODE_PATH,
       },
     },
   },
@@ -806,6 +920,29 @@ plugin({
     "nvim-treesitter/nvim-treesitter",
   },
   lazy = false,
+  keys = {
+    {
+      "<leader>rv",
+      function()
+        require("refactoring").debug.print_var({})
+      end,
+      desc = "[r]efactor print [v]ariable",
+    },
+    {
+      "<leader>rp",
+      function()
+        require("refactoring").debug.printf({})
+      end,
+      desc = "[r]efactor [p]rintf",
+    },
+    {
+      "<leader>rc",
+      function()
+        require("refactoring").debug.cleanup({})
+      end,
+      desc = "[r]efactor [c]leanup",
+    },
+  },
   opts = {
     printf_statements = {
       ts = {
@@ -813,18 +950,8 @@ plugin({
       },
     },
   },
-  config = function()
-    leaderKeymap("[r]efactor print [v]ariable", function()
-      require("refactoring").debug.print_var({})
-    end)
-
-    leaderKeymap("[r]efactor [p]rintf", function()
-      require("refactoring").debug.printf({})
-    end)
-
-    leaderKeymap("[r]efactor [c]leanup", function()
-      require("refactoring").debug.cleanup({})
-    end)
+  config = function(_, opts)
+    require("refactoring").setup(opts)
   end,
   --   printf_statements = {
   --     -- add a custom printf statement for cpp
@@ -850,22 +977,26 @@ plugin({
     { "nvim-telescope/telescope.nvim" },
   },
   event = "LspAttach",
+  keys = {
+    {
+      "<leader>la",
+      function()
+        require("tiny-code-action").code_action({})
+      end,
+      desc = "[l]sp code [a]ction",
+    },
+  },
   opts = {
     backend = "delta",
     picker = "select",
   },
-  init = function()
-    leaderKeymap("[l]sp code [a]ction", function()
-      require("tiny-code-action").code_action({})
-    end)
-  end,
 })
 
 plugin({
   "mbbill/undotree",
-  init = function()
-    leaderKeymap("[u]ndo [t]ree", vim.cmd.UndotreeToggle)
-  end,
+  keys = {
+    { "<leader>ut", "<cmd>UndotreeToggle<cr>", desc = "[u]ndo [t]ree" },
+  },
 })
 
 plugin({

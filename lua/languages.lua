@@ -19,22 +19,85 @@ vim.filetype.add({
 
 ---@type table<string, LanguageConfig>
 local langs = {
-  angular = { mason = { ["angular-language-server"] = {} } },
-  astro = { mason = { ["astro-language-server"] = {} }, conform = { prettierd = { install = true } } },
-  css = { mason = { ["css-lsp"] = {} }, conform = { prettierd = { install = true } } },
+  angular = {
+    mason = {
+      ["angular-language-server"] = {},
+    },
+  },
+  astro = {
+    mason = {
+      ["astro-language-server"] = {},
+    },
+    conform = {
+      prettierd = {
+        install = true,
+      },
+    },
+  },
+  css = {
+    mason = {
+      ["css-lsp"] = {},
+    },
+    conform = {
+      prettierd = {
+        install = true,
+      },
+    },
+  },
   diff = {},
-  html = { conform = { prettierd = { install = true } } },
+  html = {
+    conform = {
+      prettierd = {
+        install = true,
+      },
+    },
+  },
   luadoc = {},
   markdown = {},
   markdown_inline = {},
   query = {},
   vim = {},
   vimdoc = {},
-  elm = { mason = { ["elm-language-server"] = {} }, conform = { "elm_format" } },
-  gleam = { lsp = { gleam = {} }, conform = { "gleam" } },
-  javascript = { mason = { ["js-debug-adapter"] = {} }, conform = { prettierd = { install = true } } },
-  json = { conform = { prettierd = { install = true } } },
-  jsonc = { conform = { prettierd = { install = true } } },
+  elm = {
+    mason = {
+      ["elm-language-server"] = {},
+    },
+    conform = {
+      "elm_format",
+    },
+  },
+  gleam = {
+    lsp = {
+      gleam = {},
+    },
+    conform = {
+      "gleam",
+    },
+  },
+  javascript = {
+    mason = {
+      ["js-debug-adapter"] = {},
+    },
+    conform = {
+      prettierd = {
+        install = true,
+      },
+    },
+  },
+  json = {
+    conform = {
+      prettierd = {
+        install = true,
+      },
+    },
+  },
+  jsonc = {
+    conform = {
+      prettierd = {
+        install = true,
+      },
+    },
+  },
   typescript = {
     mason = {
       eslint = {
@@ -48,7 +111,11 @@ local langs = {
         },
       },
     },
-    conform = { prettierd = { install = true } },
+    conform = {
+      prettierd = {
+        install = true,
+      },
+    },
   },
   lua = {
     mason = {
@@ -61,9 +128,20 @@ local langs = {
       },
       stylua = {},
     },
-    conform = { stylua = { install = true } },
+    conform = {
+      stylua = {
+        install = true,
+      },
+    },
   },
-  ruby = { mason = { ruby_lsp = {} }, conform = { "rubocop" } },
+  ruby = {
+    mason = {
+      ruby_lsp = {},
+    },
+    conform = {
+      "rubocop",
+    },
+  },
   rust = {
     mason = {
       rust_analyzer = {
@@ -74,25 +152,48 @@ local langs = {
         },
       },
     },
-    conform = { "rustfmt" },
+    conform = {
+      "rustfmt",
+    },
   },
   sh = {
     treesitter = "bash",
-    mason = { shellcheck = {}, ["bash-language-server"] = {} },
-    conform = { shfmt = { install = true } },
+    mason = {
+      shellcheck = {},
+      ["bash-language-server"] = {},
+    },
+    conform = {
+      shfmt = {
+        install = true,
+      },
+    },
   },
-  sql = { mason = { sqlfmt = {}, sqlls = {} } },
-  kdl = { conform = { "kdlfmt" } },
+  sql = {
+    mason = {
+      sqlfmt = {},
+      sqlls = {},
+    },
+  },
+  kdl = {
+    conform = {
+      "kdlfmt",
+    },
+  },
 
   -- extra tools / servers with no treesitter ft config
-  other = { mason = { ["harper-ls"] = {}, ["herb-language-server"] = {} } },
+  other = {
+    mason = {
+      ["harper-ls"] = {},
+      ["herb-language-server"] = {},
+    },
+  },
 
   -- Used by vim's builtin ft detection for .ejs etc; keep lsp config here.
   embedded_template = {
     lsp = {
       herb_ls = {
         cmd = { "herb-language-server", "--stdio" },
-        filetypes = { "html", "ruby", "eruby", "herb" },
+        filetypes = { "ruby", "eruby", "herb" },
         root_markers = { "Gemfile", ".git" },
       },
     },

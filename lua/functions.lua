@@ -139,7 +139,7 @@ M.SearchInfrastructure = function()
     print("no search string found")
     return
   end
-  require("telescope.builtin").grep_string({ search = searchString .. ".handler" })
+  require("fzf-lua").grep({ search = searchString .. ".handler" })
 end
 
 M.InsertGuid = function()
