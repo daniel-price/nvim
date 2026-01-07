@@ -719,11 +719,13 @@ local treesitter_installs = languages.treesitter_installs
 local mason_servers = languages.mason_tools
 local lsp_servers = languages.lsp_servers
 local formatters_by_ft = languages.formatters_by_ft
+local formatters = languages.formatters
 
 debugPrint("Treesitter installs: ", vim.inspect(treesitter_installs))
 debugPrint("Mason servers/tools: ", vim.inspect(mason_servers))
 debugPrint("LSP servers: ", vim.inspect(lsp_servers))
 debugPrint("Formatters by filetype: ", vim.inspect(formatters_by_ft))
+debugPrint("Formatters: ", vim.inspect(formatters))
 
 plugin({
   -- Main LSP Configuration
@@ -910,6 +912,8 @@ plugin({ -- Autoformat
     notify_on_error = false,
     format_on_save = true,
     formatters_by_ft = formatters_by_ft,
+    formatters = formatters,
+    log_level = vim.log.levels.DEBUG,
   },
 })
 

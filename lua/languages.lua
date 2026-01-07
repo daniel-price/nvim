@@ -100,6 +100,7 @@ local langs = {
   },
   typescript = {
     mason = {
+      ["typescript-language-server"] = {},
       eslint = {
         {
           on_attach = function(_, bufnr)
@@ -139,7 +140,9 @@ local langs = {
       ruby_lsp = {},
     },
     conform = {
-      "rubocop",
+      rubyfmt = {
+        install = true,
+      },
     },
   },
   rust = {
@@ -209,6 +212,7 @@ local M = {
   lsp_servers = {},
   ---@type table<string, string[]>
   formatters_by_ft = {},
+  formatters = {},
 }
 
 for ft, cfg in pairs(langs) do
@@ -240,12 +244,19 @@ for ft, cfg in pairs(langs) do
         table.insert(M.formatters_by_ft[ft], value)
       else
         -- map-style: { prettierd = { install = true } } OR { prettierd = "prettierd" }
-        if type(value) == "table" and value.install then
-          if type(key) ~= "string" then
-            error(ft .. ": formatter name must be a string, got: " .. type(key))
+        if type(value) == "table" then
+          if value.install then
+            if type(key) ~= "string" then
+              error(ft .. ": formatter name must be a string, got: " .. type(key))
+            end
+            M.mason_tools[key] = M.mason_tools[key] or {}
+          end
+
+          if value.props then
+            -- conform.nvim formatter config
+            M.formatters[key] = value.props
           end
           table.insert(M.formatters_by_ft[ft], key)
-          M.mason_tools[key] = M.mason_tools[key] or {}
         else
           if type(value) ~= "string" then
             error(ft .. ": formatter must be a string, got: " .. type(value))
