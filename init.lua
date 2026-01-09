@@ -5,6 +5,8 @@ local languages = require("languages")
 ---------------------
 
 local DEBUG = false
+-- Path to Node.js executable managed by Mise for GitHub Copilot so that it works even in projects with different Node versions
+local COPILOT_NODE_PATH = vim.fn.expand("$HOME") .. "/.local/share/mise/installs/node/24.10.0/bin/node"
 
 ---------------------
 ------ FUNCTIONS ----
@@ -538,6 +540,7 @@ plugin({ -- Autocompletion
       lazy = false,
       opts = {
         suggestion = { auto_trigger = true, debounce = 150 },
+        copilot_node_command = COPILOT_NODE_PATH,
       },
     },
   },

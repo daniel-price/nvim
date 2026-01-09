@@ -140,9 +140,9 @@ local langs = {
       ruby_lsp = {},
     },
     conform = {
-      rubyfmt = {
-        install = true,
-      },
+      -- rubyfmt = {
+      --   install = true,
+      -- },
     },
   },
   rust = {
