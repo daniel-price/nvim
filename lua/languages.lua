@@ -19,11 +19,6 @@ vim.filetype.add({
 
 ---@type table<string, LanguageConfig>
 local langs = {
-  angular = {
-    mason = {
-      ["angular-language-server"] = {},
-    },
-  },
   astro = {
     mason = {
       ["astro-language-server"] = {},
@@ -100,7 +95,6 @@ local langs = {
   },
   typescript = {
     mason = {
-      ["typescript-language-server"] = {},
       eslint = {
         {
           on_attach = function(_, bufnr)
